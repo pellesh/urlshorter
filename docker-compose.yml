@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+  frontend:
+    container_name: "frontend"
+    build: ./client
+    ports:
+    - 80:80
+    networks:
+      - backend
+  backend:
+    container_name: "backend"
+    environment: 
+      - "NODE_ENV=DOCKER" 
+    build: ./
+    ports:
+      - ${EXPRESS_PORT}:${EXPRESS_PORT} 
+    volumes:
+      - ./:/usr/src/server
+    networks:
+      - backend
+    depends_on:
+      - mongo
+      - redis
+  mongo:
+    image: mongo
+    container_name: "mongo"
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: main
+    volumes:
+      - ../mongodbdata:/data/db
+      - ./src/config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    networks:
+      - backend
+    ports:
+      - 27017:27017
+  redis:
+    image: redis:bullseye
+    container_name: "redis"
+    restart: always
+    volumes:
+      - ../redisdata:/data
+    ports:
+    - ${REDIS_PORT}:${REDIS_PORT}
+    networks:
+    - backend
+
+networks:
+  backend:
+    driver: bridge
